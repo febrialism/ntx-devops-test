@@ -95,7 +95,7 @@ pipeline {
                 sh '''
                     docker run -d \
                         --name ${CONTAINER_NAME} \
-                        -p ${APP_PORT}:3500 \
+                        -p ${APP_PORT}:3000 \
                         --restart unless-stopped \
                         ${DOCKER_IMAGE}:latest
                     
@@ -126,7 +126,7 @@ pipeline {
                     
                     if [ "$response" = "200" ]; then
                         echo "✅ Deployment verification successful"
-                        curl http://localhost:3500/
+                        curl http://localhost:3000/
                     else
                         echo "❌ Deployment verification failed - HTTP $response"
                         exit 1
