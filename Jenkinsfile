@@ -100,7 +100,7 @@ pipeline {
                 sh '''
                     docker run -d \
                         --name ${CONTAINER_NAME}-second \
-                        -p ${APP_PORT}:3005 \
+                        -p 3001:${APP_PORT} \
                         --restart unless-stopped \
                         ${DOCKER_IMAGE}:latest
                     
