@@ -126,7 +126,7 @@ pipeline {
                     
                     if [ "$response" = "200" ]; then
                         echo "✅ Deployment verification successful"
-                        curl http://localhost:${APP_PORT}/
+                        curl http://localhost:3500/
                     else
                         echo "❌ Deployment verification failed - HTTP $response"
                         exit 1
@@ -142,7 +142,7 @@ pipeline {
             sh 'docker images | grep ${DOCKER_IMAGE}'
         }
         success {
-            echo '✅ Pipeline succeeded! Application is running at http://localhost:3000'
+            echo '✅ Pipeline succeeded! Application is running at http://localhost:3500'
         }
         failure {
             echo '❌ Pipeline failed!'
