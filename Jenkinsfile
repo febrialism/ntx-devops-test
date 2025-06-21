@@ -93,9 +93,8 @@ pipeline {
                 '''
             }
         }
-    }
 
-    stage('Deploy Container') {
+        stage('Deploy Second Container') {
             steps {
                 echo 'Deploying second container...'
                 sh '''
@@ -119,6 +118,8 @@ pipeline {
                 '''
             }
         }
+    }
+
     
     post {
         always {
