@@ -5,10 +5,10 @@ pipeline {
         DOCKER_IMAGE = 'my-nodejs-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
         CONTAINER_NAME = 'nodejs-app-container'
-        // The port INSIDE the container
-        APP_PORT = 3000 
+        // The port INSIDE the container. It's a string here, which is standard for env vars.
+        APP_PORT = '3000' 
         // Port for the final deployed container on the host
-        DEPLOY_PORT = 3500 
+        DEPLOY_PORT = '3500' 
     }
     
     triggers {
@@ -27,7 +27,6 @@ pipeline {
             steps {
                 echo 'Installing Node.js dependencies...'
                 sh 'npm install'
-                // sh 'npm run test:unit' // Good practice for tests that don't need a running server
             }
         }
 
@@ -45,21 +44,16 @@ pipeline {
             steps {
                 echo "Running integration tests against the new Docker image..."
                 script {
-                    // Jenkins will map a random host port to the container's APP_PORT (3000)
-                    // The 'appImage.withRun' block handles starting, stopping, and cleaning up the temporary test container automatically
                     appImage.withRun("--name test-${CONTAINER_NAME}-${BUILD_NUMBER}") { container ->
                         
                         // *** FIX IS HERE ***
-                        // We use docker.port() to find the randomly assigned host port
-                        def mappedPort = docker.port(container.id, APP_PORT)
+                        // We convert the APP_PORT string from the environment block to an Integer
+                        def mappedPort = docker.port(container.id, APP_PORT.toInteger())
                         
                         echo "Waiting for test container to be ready on host port ${mappedPort}..."
                         
-                        // A more robust wait loop
                         sh """
                             for i in \$(seq 1 15); do
-                                # *** FIX IS HERE ***
-                                # Use the mappedPort variable in the shell command
                                 if curl -s -f http://localhost:${mappedPort}/health; then
                                     echo 'Test container is up!'
                                     break
@@ -75,10 +69,6 @@ pipeline {
                         """
                         
                         echo "Running tests against http://localhost:${mappedPort}..."
-                        
-                        // *** FIX IS HERE ***
-                        // Your npm test script must be configured to use the container's URL
-                        // We pass it as an environment variable
                         sh "APP_URL=http://localhost:${mappedPort} npm test"
                     }
                 }
