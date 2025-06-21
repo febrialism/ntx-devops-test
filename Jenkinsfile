@@ -95,7 +95,7 @@ pipeline {
                 sh '''
                     docker run -d \
                         --name ${CONTAINER_NAME} \
-                        -p ${APP_PORT}:3001 \
+                        -p ${APP_PORT}:3000 \
                         --restart unless-stopped \
                         ${DOCKER_IMAGE}:latest
                     
