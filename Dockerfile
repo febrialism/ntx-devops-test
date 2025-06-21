@@ -29,4 +29,6 @@ EXPOSE 3000
 USER node
 
 # Command to run the application
-CMD [ "npm", "start" ]
+RUN apk add --no-cache tini
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "app.js"]
