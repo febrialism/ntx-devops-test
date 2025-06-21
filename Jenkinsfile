@@ -43,7 +43,9 @@ pipeline {
                 echo 'Stopping and removing previous container...'
                 sh '''
                     docker stop ${CONTAINER_NAME} || true
+                    docker stop ${CONTAINER_NAME}-second || true
                     docker rm ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME}-second || true
                 '''
             }
         }
