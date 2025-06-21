@@ -33,7 +33,7 @@ pipeline {
                 echo 'Starting application for testing...'
                 sh '''
                     # Start app in background
-                    nohup npm start > app.log 2>&1 &
+                    nohup npm start --port 3131 > app.log 2>&1 &
                     echo $! > app.pid
                     
                     # Wait for app to start
