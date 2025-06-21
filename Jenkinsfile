@@ -94,6 +94,31 @@ pipeline {
             }
         }
     }
+
+    stage('Deploy Container') {
+            steps {
+                echo 'Deploying second container...'
+                sh '''
+                    docker run -d \
+                        --name ${CONTAINER_NAME}-second \
+                        -p ${APP_PORT}:3005 \
+                        --restart unless-stopped \
+                        ${DOCKER_IMAGE}:latest
+                    
+                    # Wait for container to start
+                    sleep 5
+                    
+                    # Verify container is running
+                    if docker ps | grep -q ${CONTAINER_NAME}-second; then
+                        echo "Second Container deployed successfully"
+                        docker logs ${CONTAINER_NAME}-second
+                    else
+                        echo "Second Container deployment failed"
+                        exit 1
+                    fi
+                '''
+            }
+        }
     
     post {
         always {
