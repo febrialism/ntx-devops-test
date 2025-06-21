@@ -57,6 +57,7 @@ pipeline {
                     docker run -d \
                         --name ${CONTAINER_NAME} \
                         --network my-loadbalancer-net \
+                        -p localhost:${APP_PORT}:3000 \
                         --restart unless-stopped \
                         ${DOCKER_IMAGE}:latest
                     
@@ -103,6 +104,7 @@ pipeline {
                     docker run -d \
                         --name ${CONTAINER_NAME}-second \
                         --network my-loadbalancer-net \
+                        -p localhost:3001:${APP_PORT} \
                         --restart unless-stopped \
                         ${DOCKER_IMAGE}:latest
                     
