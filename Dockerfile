@@ -29,4 +29,4 @@ EXPOSE 3000
 USER node
 
 # Command to run the application
-CMD ["node", "app.js"]
+CMD [ "npm", "start" ]
