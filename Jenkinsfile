@@ -21,10 +21,10 @@ pipeline {
             }
         }
         
-        stage('Install Dependencies') {
+        stage('Install Dependencies & App Test') {
             steps {
-                echo 'Installing Node.js dependencies...'
-                sh 'npm install'
+                echo 'Installing Node.js & App Test...'
+                sh 'npm install test'
             }
         }
         
