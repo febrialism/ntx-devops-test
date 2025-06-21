@@ -2,9 +2,9 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_IMAGE = 'webapp-dockerize-nodejs'
+        DOCKER_IMAGE = 'my-nodejs-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        CONTAINER_NAME = 'webapp-nodejs'
+        CONTAINER_NAME = 'nodejs-app-container'
         APP_PORT = '3000'
     }
     
