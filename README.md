@@ -1,15 +1,16 @@
 # Build Simple CI/CD using Jenkins and Environment Provision with Ansible.
 
-Selamat Pagi Pak Hafidz, Bu Yulia dan Tim.
+**Selamat Pagi Pak Hafidz, Bu Yulia dan Tim.**
 Terima kasih sebelumnya sudah reach lamaran saya, memberikan saya waktu tambahan dan kesempatan saya untuk ikut Test.
 
 Izin menjelaskan tentang solusi test dari saya, dengan catatan
-1. Nenggunakan Environment Local Lab, dengan setup services All-in-One dalam satu VM (Jenkins, Docker, NodeJs & Nginx LB).
+1. Menggunakan Environment Local Lab untuk simplify, dengan setup services All-in-One dalam satu VM (Jenkins, Docker, NodeJs & Nginx LB).
 2. Menggunakan Claude untuk menyelesaikan Test ini.
 
 Kedua poin diatas perlu saya lakukan untuk mempersingkat waktu, karena saya hanya bisa melakukannya diweekend ini, dari malam hari ke pagi. Ditambah saya belum familiar, karena masih belajar dan switch dari Infrastructure Engineer ke DevOps.
 
 Berikut untuk Topologinya.
+![Topology](https://github.com/user-attachments/assets/72b807e2-cc0b-4099-8bf2-52914de0811e)
 
 Untuk Flow CI/CDnya sebagai berikut :
 1. Checkout secara berkala ke Repo tiap 2 menit.
