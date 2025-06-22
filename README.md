@@ -26,7 +26,12 @@ Semuanya saya test secara manual terlebih dahulu, baru saya buat pipelines and a
 
 Untuk Ansible playbook saya simpan di branch Ansible dan untuk Demonya saya upload via Youtube https://youtu.be/8w4VPUnW4ic. Playbook menggunakan repository community dan compatible dengan RHEL 8 like seperti Rocky, CentOS, Alma dan lain-lain.
 
-Sekian jawaban test dari saya, sebelumnya saya ucapkan terima kasih banyak atas kesempatannya.
+00:00 - 12:55 Running Playbook.
+12:56 - 20:55 Setup Jenkins and Pipeline.
+20:56 - 24:12 Trigger Pipeline Manual and Test.
+24:13 - end	  Trigger Pipeline Auto and Test. 
+
+Sekian jawaban test dari saya, sebelumnya saya ucapkan terima kasih banyak sekali lagi atas kesempatannya.
 
 
 
