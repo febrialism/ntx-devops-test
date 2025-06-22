@@ -1,0 +1,418 @@
+---
+- name: Provision Rocky Linux 8 with Jenkins, Docker, Nginx and Node.js
+  hosts: rocky
+  become: yes
+  vars:
+    jenkins_version: "2.504.2"
+    docker_ce_version: "26.1.3"
+    docker_cli_version: "26.1.3"
+    containerd_version: "1.6.32"
+    docker_compose_version: "2.27.0"
+    nodejs_version: "22"
+    
+  tasks:
+    - name: Add Jenkins repository
+      block:
+        - name: Add Jenkins repository
+          yum_repository:
+            name: jenkins
+            description: Jenkins-stable
+            baseurl: https://pkg.jenkins.io/redhat-stable
+            gpgcheck: yes
+            enabled: yes
+            
+        - name: Import Jenkins GPG key
+          rpm_key:
+            key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+            state: present
+
+    - name: Add Docker CE repository
+      yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable - $basearch
+        baseurl: https://download.docker.com/linux/rhel/$releasever/$basearch/stable
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/rhel/gpg
+        enabled: yes
+
+    - name: Install Node.js 22 repository
+      shell: |
+        curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+      args:
+        creates: /etc/yum.repos.d/nodesource-el8.repo
+
+    - name: Install Jenkins, Git and Java packages
+      dnf:
+        name:
+          - "jenkins-{{ jenkins_version }}"
+          - git
+          - java-21-openjdk
+        state: present
+        update_cache: yes
+
+    - name: Install Docker packages
+      dnf:
+        name:
+          - "docker-ce-{{ docker_ce_version }}"
+          - "docker-ce-cli-{{ docker_cli_version }}"
+          - "containerd.io-{{ containerd_version }}"
+          - "docker-compose-plugin-{{ docker_compose_version }}"
+        state: present
+        update_cache: yes
+
+    - name: Install Node.js
+      dnf:
+        name: nodejs
+        state: present
+        update_cache: yes
+
+    - name: Add current user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      when: ansible_user is defined
+
+    - name: Add jenkins user to docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Configure firewalld
+      block:
+        - name: Enable and start firewalld
+          systemd:
+            name: firewalld
+            enabled: yes
+            state: started
+
+        - name: Allow port 80/tcp permanently
+          firewalld:
+            port: 80/tcp
+            permanent: yes
+            state: enabled
+            immediate: yes
+
+        - name: Allow port 8080/tcp permanently
+          firewalld:
+            port: 8080/tcp
+            permanent: yes
+            state: enabled
+            immediate: yes
+
+    - name: Enable and start Jenkins service
+      systemd:
+        name: jenkins
+        enabled: yes
+        state: started
+
+    - name: Wait for Jenkins to start up
+      uri:
+        url: "http://localhost:8080"
+        method: GET
+        status_code: [200, 403]
+      register: jenkins_service_status
+      until: jenkins_service_status.status in [200, 403]
+      retries: 60
+      delay: 10
+
+    - name: Get Jenkins initial admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_initial_password
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Jenkins initial admin password
+      debug:
+        msg: "Jenkins initial admin password: {{ jenkins_initial_password.stdout }}"
+      when: jenkins_initial_password.stdout is defined
+
+    - name: Create Jenkins plugins directory
+      file:
+        path: /var/lib/jenkins/plugins
+        state: directory
+        owner: jenkins
+        group: jenkins
+        mode: '0755'
+
+    - name: Stop Jenkins for plugin installation
+      systemd:
+        name: jenkins
+        state: stopped
+
+    - name: Download and install Jenkins plugins
+      block:
+        - name: Download Git plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/git/latest/git.hpi"
+            dest: "/var/lib/jenkins/plugins/git.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download Docker Workflow plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/docker-workflow/latest/docker-workflow.hpi"
+            dest: "/var/lib/jenkins/plugins/docker-workflow.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download Docker Plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/docker-plugin/latest/docker-plugin.hpi"
+            dest: "/var/lib/jenkins/plugins/docker-plugin.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download GitHub Integration plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/github-integration/latest/github-pullrequest.hpi"
+            dest: "/var/lib/jenkins/plugins/github-pullrequest.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download Pipeline plugin (workflow-aggregator)
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/workflow-aggregator/latest/workflow-aggregator.hpi"
+            dest: "/var/lib/jenkins/plugins/workflow-aggregator.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download Docker Commons plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/docker-commons/latest/docker-commons.hpi"
+            dest: "/var/lib/jenkins/plugins/docker-commons.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download Docker Java API plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/docker-java-api/latest/docker-java-api.hpi"
+            dest: "/var/lib/jenkins/plugins/docker-java-api.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+        - name: Download Cloud Stats plugin
+          get_url:
+            url: "https://updates.jenkins.io/download/plugins/cloud-stats/latest/cloud-stats.hpi"
+            dest: "/var/lib/jenkins/plugins/cloud-stats.jpi"
+            owner: jenkins
+            group: jenkins
+            mode: '0644'
+
+    - name: Create Jenkins configuration directory
+      file:
+        path: /var/lib/jenkins
+        state: directory
+        owner: jenkins
+        group: jenkins
+        mode: '0755'
+
+    - name: Skip Jenkins setup wizard
+      copy:
+        content: |
+          jenkins.install.runSetupWizard=false
+          jenkins.install.InstallState=INITIAL_SETUP_COMPLETED
+        dest: /var/lib/jenkins/jenkins.install.InstallUtil.lastExecVersion
+        owner: jenkins
+        group: jenkins
+        mode: '0644'
+
+    - name: Create basic Jenkins config
+      copy:
+        content: |
+          <?xml version='1.1' encoding='UTF-8'?>
+          <hudson>
+            <version>{{ jenkins_version }}</version>
+            <numExecutors>2</numExecutors>
+            <mode>NORMAL</mode>
+            <useSecurity>true</useSecurity>
+            <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy">
+              <denyAnonymousReadAccess>true</denyAnonymousReadAccess>
+            </authorizationStrategy>
+            <securityRealm class="hudson.security.HudsonPrivateSecurityRealm">
+              <disableSignup>true</disableSignup>
+              <enableCaptcha>false</enableCaptcha>
+            </securityRealm>
+            <disableRememberMe>false</disableRememberMe>
+            <projectNamingStrategy class="jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy"/>
+            <workspaceDir>${JENKINS_HOME}/workspace/${ITEM_FULLNAME}</workspaceDir>
+            <buildsDir>${ITEM_ROOTDIR}/builds</buildsDir>
+            <markupFormatter class="hudson.markup.EscapedMarkupFormatter"/>
+            <jdks/>
+            <viewsTabBar class="hudson.views.DefaultViewsTabBar"/>
+            <myViewsTabBar class="hudson.views.DefaultMyViewsTabBar"/>
+            <clouds/>
+            <quietPeriod>5</quietPeriod>
+            <scmCheckoutRetryCount>0</scmCheckoutRetryCount>
+            <views>
+              <hudson.model.AllView>
+                <owner class="hudson" reference="../../.."/>
+                <name>all</name>
+                <filterExecutors>false</filterExecutors>
+                <filterQueue>false</filterQueue>
+                <properties class="hudson.model.View$PropertyList"/>
+              </hudson.model.AllView>
+            </views>
+            <primaryView>all</primaryView>
+            <slaveAgentPort>-1</slaveAgentPort>
+            <label></label>
+            <crumbIssuer class="hudson.security.csrf.DefaultCrumbIssuer">
+              <excludeClientIPFromCrumb>false</excludeClientIPFromCrumb>
+            </crumbIssuer>
+            <nodeProperties/>
+            <globalNodeProperties/>
+          </hudson>
+        dest: /var/lib/jenkins/config.xml
+        owner: jenkins
+        group: jenkins
+        mode: '0644'
+
+    - name: Start Jenkins after plugin installation
+      systemd:
+        name: jenkins
+        state: started
+
+    - name: Wait for Jenkins to be ready after restart
+      uri:
+        url: "http://localhost:8080"
+        method: GET
+        status_code: [200, 403]
+      register: jenkins_restart_status
+      until: jenkins_restart_status.status in [200, 403]
+      retries: 30
+      delay: 10
+
+    - name: Create nginx build directory
+      file:
+        path: /tmp/nginx-build
+        state: directory
+        mode: '0755'
+
+    - name: Create nginx.conf file
+      copy:
+        content: |
+          events {}
+          http {
+              # Define a group of servers that Nginx will balance traffic between.
+              # Nginx will use container names 'app1' and 'app2' as hostnames.
+              # This works because they will be on the same Docker network.
+              upstream my_backend_servers {
+                  # By default, Nginx uses the round-robin algorithm.
+                  server nodejs-app-container:3000;
+                  server nodejs-app-container-second:3000;
+              }
+              server {
+                  # Nginx will listen for incoming HTTP traffic on port 80 (inside the container).
+                  listen 80;
+                  location / {
+                      # Forward all incoming requests to our upstream server group.
+                      proxy_pass http://my_backend_servers;
+                      # Set headers to pass along client information to the backend apps.
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+              }
+          }
+        dest: /tmp/nginx-build/nginx.conf
+        mode: '0644'
+
+    - name: Create Dockerfile for nginx
+      copy:
+        content: |
+          # Use the official Nginx image from Docker Hub.
+          FROM nginx:latest
+          # Remove the default Nginx configuration file.
+          RUN rm /etc/nginx/conf.d/default.conf
+          # Copy our custom nginx.conf to the container.
+          COPY nginx.conf /etc/nginx/nginx.conf
+        dest: /tmp/nginx-build/Dockerfile.nginx
+        mode: '0644'
+
+    - name: Build nginx load balancer image
+      ignore_errors: true
+      shell: |
+        cd /tmp/nginx-build
+        docker build -f Dockerfile.nginx -t nginx-load-balancer:latest .
+      register: docker_build_result
+      changed_when: "'Successfully built' in docker_build_result.stdout or 'Successfully tagged' in docker_build_result.stdout"
+
+    - name: Create Docker network for load balancer
+      shell: docker network create my-loadbalancer-net
+      register: network_create_result
+      failed_when: 
+        - network_create_result.rc != 0
+        - "'already exists' not in network_create_result.stderr"
+      changed_when: "'already exists' not in network_create_result.stderr"
+
+    - name: Run nginx load balancer container
+      shell: docker run -d --name nginx-lb -p 80:80 --network my-loadbalancer-net nginx-load-balancer
+      register: nginx_container_result
+      failed_when: 
+        - nginx_container_result.rc != 0
+        - "'already in use' not in nginx_container_result.stderr"
+      changed_when: "'already in use' not in nginx_container_result.stderr"
+
+    - name: Verify Docker installation
+      command: docker --version
+      register: docker_version_output
+      changed_when: false
+
+    - name: Verify Node.js installation
+      command: node --version
+      register: nodejs_version_output
+      changed_when: false
+
+    - name: Verify Jenkins installation
+      command: systemctl is-active jenkins
+      register: jenkins_status
+      changed_when: false
+
+    - name: Get Jenkins initial admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_initial_password
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Jenkins initial admin password
+      debug:
+        msg: "Jenkins initial admin password: {{ jenkins_initial_password.stdout }}"
+      when: jenkins_initial_password.stdout is defined
+
+    - name: Display installation results
+      debug:
+        msg:
+          - "Docker version: {{ docker_version_output.stdout }}"
+          - "Node.js version: {{ nodejs_version_output.stdout }}"
+          - "Jenkins status: {{ jenkins_status.stdout }}"
+          - "Docker network created: my-loadbalancer-net"
+          - "Load balancer image created"
+          - "Nginx load balancer container run on port 80"
+          - "Firewall configured: ports 80 and 8080 are open"
+          - "Jenkins plugins installed: git, docker-workflow, docker-plugin, github-integration, workflow-aggregator, docker-commons, docker-java-api, cloud-stats"
+
+  handlers:
+    - name: restart docker
+      systemd:
+        name: docker
+        state: restarted
+
+    - name: restart jenkins
+      systemd:
+        name: jenkins
+        state: restarted
