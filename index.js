@@ -11,7 +11,7 @@ const server = http.createServer(handleRequest);
 // Export server and handler for testing
 module.exports = { server, handleRequest };
 
-// Trigger pipelines to run.
+// Trigger pipelines to run..
 // Start the server if not in test mode
 if (require.main === module) {
   server.listen(3000, () => {
