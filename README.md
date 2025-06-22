@@ -1,106 +1,31 @@
-# DevOps Engineer - Technical Test
+# Build Simple CI/CD using Jenkins and Environment Provision with Ansible.
 
-Welcome to the DevOps Engineer Technical Test! This exercise assesses your ability to create automated infrastructure and CI/CD pipelines while adhering to modern DevOps methodologies.
+Selamat Pagi Pak Hafidz, Bu Yulia dan Tim.
+Terima kasih sebelumnya sudah reach lamaran saya, memberikan saya waktu tambahan dan kesempatan saya untuk ikut Test.
 
----
+Izin menjelaskan tentang solusi test dari saya, dengan catatan
+1. Nenggunakan Environment Local Lab, dengan setup services All-in-One dalam satu VM (Jenkins, Docker, NodeJs & Nginx LB).
+2. Menggunakan Claude untuk menyelesaikan Test ini.
 
-## Objective
+Kedua poin diatas perlu saya lakukan untuk mempersingkat waktu, karena saya hanya bisa melakukannya diweekend ini, dari malam hari ke pagi. Ditambah saya belum familiar, karena masih belajar dan switch dari Infrastructure Engineer ke DevOps.
 
-Your task is to create a CI build pipeline that deploys this Node.js web application to a load-balanced environment. You can complete this test locally using tools like Docker or on a cloud provider of your choice. If using a cloud provider, we recommend using a free-tier account to avoid costs.
+Berikut untuk Topologinya.
 
----
+Untuk Flow CI/CDnya sebagai berikut :
+1. Checkout secara berkala ke Repo tiap 2 menit.
+2. Install Depedencies untuk build dan run node app test.
+3. Build docker image.
+4. Stop existing container (Jika ada).
+5. Deploy first container.
+6. Verify apakah container bisa di curl dan mendapat respon HTTP 200.
+7. Deploy second container.
+8. Pipeline selesai dan cleanup old images docker (keep 5 images).
 
-## Requirements
+Semuanya saya test secara manual terlebih dahulu, baru saya buat pipelines and ansible playbook untuk provisioning VMnya. Itu kenapa banyak commit terjadi di repo untuk try and error.
 
-### CI Build Pipeline
+Untuk Ansible playbook saya simpan di branch Ansible dan untuk Demonya saya upload via Youtube https://youtu.be/8w4VPUnW4ic. Playbook menggunakan repository community dan compatible dengan RHEL 8 like seperti Rocky, CentOS, Alma dan lain-lain.
 
-1. **Trigger Mechanism**:  
-   - The CI job should trigger automatically when a feature branch is pushed to GitHub.  
-   - If working locally, implement an alternative method to trigger the pipeline.
+Sekian jawaban test dari saya, sebelumnya saya ucapkan terima kasih banyak atas kesempatannya.
 
-2. **Deployment Workflow**:  
-   - The CI pipeline should test and deploy the application to the target environment after a successful build.
 
----
 
-### Target Environment
-
-The environment must meet the following specifications:
-
-1. **Load Balancer**:
-   - Accessible via HTTP on port 80.
-   - Configured to use a **round-robin** strategy to distribute traffic between application servers.
-
-2. **Application Servers**:
-   - Two instances running this web application.
-   - Each accessible via HTTP on port 3000.
-   - The application must respond with:  
-     `Hi there! I'm being served from {hostname}!`
-
----
-
-## Tools and Technologies
-
-You are free to use any tools and services to implement your solution. Feel free to tailor what you need Below are some options:
-
-- **CI Services**: GitHub Actions, Jenkins(prefered), GitLab CI/CD, CircleCI
-- **Provisioning Tools**(optional): Terraform, Ansible, CloudFormation
-- **Local Environment**: Docker , Docker swarm or Minikube
-- **Cloud Providers**: Free of choice, but u can use your local machine too
-- **Load Balancers**: NGINX, HAProxy, Cloud-native load balancers or Traefik
-- **Version Control**: GitHub (fork this repository) or Gitlab (re-push the repo)
-
----
-
-## Submission Instructions
-
-1. Fork this repository to your GitHub account.
-2. Implement the solution, ensuring to:
-   - Commit frequently to demonstrate your development process.
-   - Include a clear and structured project layout.
-3. Push your final solution to your public repository.
-4. Write your Solution and Execution Plan on .md file
-4. Send us the URL to your repository for review.
-
----
-
-## Evaluation Criteria
-
-We will evaluate your submission based on the following:
-
-1. **Functionality**: Does the environment meet the requirements (load balancer, two app servers, correct response)?
-2. **Automation**: Is the infrastructure fully automated and deployable using IaC and/or CI/CD pipelines?
-3. **Code Quality**: Is the code readable, modular, and maintainable?
-4. **DevOps Practices**: Does the solution adhere to DevOps principles such as scalability and fault tolerance?
-
----
-
-## Running the Web Application
-
-This is a Node.js application. Use the following commands to run it locally:
-
-- **Run Tests**:  
-  ```bash
-  npm test
-  ```
-- **Start the HTTP Server**:  
-  ```bash
-  npm start
-  ```
-
----
-
-## Notes
-
-- Be sure to document your solution thoroughly, including:
-  - How to deploy the environment.
-  - Explanation of tools and services used.
-  - Assumptions and challenges encountered during implementation.
-  - Recommendation of improvement can be implement on this Project
-- You are encouraged to showcase additional skills or optimizations (e.g., scaling, monitoring, or securing the application).
-
-Good luck, and happy coding! 🚀
-
---- 
-
-Let me know if you need further information.
